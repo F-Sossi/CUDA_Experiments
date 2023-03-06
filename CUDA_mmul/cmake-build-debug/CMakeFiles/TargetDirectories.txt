@@ -1,3 +1,0 @@
-/home/user/repos/CUDA_Experiments/CUDA_mmul/cmake-build-debug/CMakeFiles/lab3.dir
-/home/user/repos/CUDA_Experiments/CUDA_mmul/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/user/repos/CUDA_Experiments/CUDA_mmul/cmake-build-debug/CMakeFiles/rebuild_cache.dir
