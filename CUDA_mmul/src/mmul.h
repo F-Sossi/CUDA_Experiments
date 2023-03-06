@@ -12,6 +12,8 @@
 #include <cmath>
 #include <random>
 #include <cstdio>
+#include <iostream>
+#include <vector>
 
 //#define TESTDATA
 #define RANDOMDATA
@@ -19,6 +21,7 @@
 
 // This is the size of the block
 constexpr int TILE_SIZE = 32;
+
 
 
 //---------------------------------------------------------------------------
@@ -36,9 +39,13 @@ __global__ void gemm_naive(const T *matrix_a, const T *matrix_b, T *matrix_c, in
 
     // Compute the dot product of the row of matrix_a and the column of matrix_b
     if (row < rows && col < cols) {
+
         T temp = 0.0;
         for (int k = 0; k < width; k++) {
-            temp += matrix_a[row * width + k] * matrix_b[k * cols + col];
+
+            // use fma to minmise precision loss
+            temp = fma(matrix_a[row * width + k], matrix_b[k * cols + col], temp);
+        
         }
         matrix_c[row * cols + col] = temp;
     }
@@ -66,7 +73,6 @@ __global__ void gemm_kahan(const T *matrix_a, const T *matrix_b, T *matrix_c, in
         matrix_c[row * cols + col] = sum;
     }
 }
-
 
 //---------------------------------------------------------------------------
 // Function for Naive Matrix Matrix Multiplication Tiling only
@@ -161,13 +167,13 @@ __global__ void gemm_tiled_v2(const T *matrix_a, const T *matrix_b, T *matrix_c,
 
         // Compute the dot product of the tiles
         for (int i = 0; i < TILE_SIZE; i += 2) {
-            // calc temp using fma
+
+            // calc temp using fused multiply add
             temp = fma(As[threadIdx.y][i], Bs[i][threadIdx.x], temp);
-            //temp += As[threadIdx.y][i] * Bs[i][threadIdx.x];
             if (i+1 < TILE_SIZE) {
-                // calc temp using fma
+
+                // calc temp using fused multiply add
                 temp = fma(As[threadIdx.y][i+1], Bs[i+1][threadIdx.x], temp);
-                //temp += As[threadIdx.y][i+1] * Bs[i+1][threadIdx.x];
             }
         }
 
@@ -198,4 +204,33 @@ get_time()
 // Input: vectors to hold timing data
 // Output: results.csv
 //---------------------------------------------------------------------------
+
+
+void print_to_csv(const std::vector<long long>& naive_w_memory,
+                  const std::vector<long long>& naive_wo_memory,
+                  const std::vector<long long>& tiled_w_memory,
+                  const std::vector<long long>& tiled_wo_memory,
+                  const std::vector<long long>& cublas_w_memory,
+                  const std::vector<long long>& cublas_wo_memory,
+                  const std::vector<int>& n,
+                  const std::string& filename)
+{
+    std::ofstream outfile(filename);
+    if (outfile.is_open()) {
+        outfile << "Thread per block,N,Naive with memory (ms),Naive without memory (ms),Tiled with memory (ms),Tiled without memory (ms),cuBLAS with memory (ms),cuBLAS without memory (ms)\n";
+        for (int i = 0; i < naive_w_memory.size(); i++) {
+            outfile << n[i] << ","
+                    << naive_w_memory[i] << ","
+                    << naive_wo_memory[i] << ","
+                    << tiled_w_memory[i] << ","
+                    << tiled_wo_memory[i] << ","
+                    << cublas_w_memory[i] << ","
+                    << cublas_wo_memory[i] << "\n";
+        }
+        outfile.close();
+    } else {
+        std::cerr << "Error: Unable to open output file " << filename << std::endl;
+    }
+}
+
 
