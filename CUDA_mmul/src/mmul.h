@@ -18,6 +18,9 @@
 //#define TESTDATA
 #define RANDOMDATA
 //#define DEBUG
+#define SHARED 
+//#define NAIVE
+//#define WRITE
 
 // This is the size of the block
 constexpr int TILE_SIZE = 32;

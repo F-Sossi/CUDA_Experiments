@@ -115,7 +115,7 @@ int main()
         cudaMalloc((void**)&device_matrix_a, n * n * sizeof(double));
         cudaMalloc((void**)&device_matrix_b, n * n * sizeof(double));
         cudaMalloc((void**)&device_matrix_ref, n * n * sizeof(double));
-        cudaMalloc((void**)&device_matrix_naive, n * n * sizeof(double));
+        //cudaMalloc((void**)&device_matrix_naive, n * n * sizeof(double));
 
         // Copy input data to GPU memory
         cudaMemcpy(device_matrix_a, matrix_a, n * n * sizeof(double), cudaMemcpyHostToDevice);
@@ -180,10 +180,10 @@ int main()
         cudaFree(device_matrix_b);
         cudaFree(device_matrix_ref);
 
-
         //------------------------------------------------------------------------------------------
         // Compute the matrix multiplication using naive GEMM
         //------------------------------------------------------------------------------------------
+    #ifdef NAIVE
 
         std::cout << "Matrix Multiplication using naive GEMM" << std::endl;
 
@@ -255,19 +255,21 @@ int main()
         cudaFree(device_matrix_a);
         cudaFree(device_matrix_b);
         cudaFree(device_matrix_naive);
+    #endif
 
         //------------------------------------------------------------------------------------------
         // Compute the matrix multiplication using shared memory
         //------------------------------------------------------------------------------------------
-
+    #ifdef SHARED
         std::cout << "Matrix Multiplication using shared memory" << std::endl;
 
         auto tiled_w_mem_start = get_time();
 
+        // Allocate GPU memory
         cudaMalloc((void **)&device_matrix_a, n * n * sizeof(double));
         cudaMalloc((void **)&device_matrix_b, n * n * sizeof(double));
         cudaMalloc((void **)&device_matrix_tiled, n * n * sizeof(double));
-        cudaMemset(device_matrix_tiled, 0, n * n * sizeof(double));
+        //cudaMemset(device_matrix_tiled, 0, n * n * sizeof(double));
 
         // Copy input data to GPU memory
         cudaMemcpy(device_matrix_a, matrix_a, n * n * sizeof(double), cudaMemcpyHostToDevice);
@@ -307,11 +309,10 @@ int main()
         // print time for tiled without memory
         std::cout << "Time for tiled without memory: " << tiled_wo_mem_time << " ns" << std::endl;
         std::cout << std::endl;
-
-
-    #ifdef DEBUG
+        
+        #ifdef DEBUG
         std::cout << "matrix_tiled" << std::endl;
-
+        
         //print matrix_tiled
         for (int i = 0; i < n; i++)
         {
@@ -321,15 +322,16 @@ int main()
             }
             std::cout << std::endl;
         }
-
+        
         std::cout << std::endl;
-    #endif
-
+        #endif
+        
         // Free GPU memory
         cudaFree(device_matrix_a);
         cudaFree(device_matrix_b);
         cudaFree(device_matrix_tiled);
-
+    #endif
+        
         // calcualte the average error between the reference and the tiled matrix and the naive matrix
         double error_naive = 0.0;
         double error_tiled = 0.0;
@@ -355,10 +357,12 @@ int main()
         free(matrix_tiled);
     }
 
+#ifdef WRITE
     // Write timing data to a CSV file
     std::string filename = "results.csv";
     print_to_csv(naive_w_memory, naive_wo_memory, tiled_w_memory, tiled_wo_memory,
-                 cublas_w_memory, cublas_wo_memory, n_values,filename);   
+                 cublas_w_memory, cublas_wo_memory, n_values,filename); 
+#endif  
 
 
     return 0;
