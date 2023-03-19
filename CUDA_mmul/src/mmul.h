@@ -1,7 +1,12 @@
 //---------------------------------------------------------------------------
-// mmul.h
-// Author: Frank Sossi,
+// mmul.h - Matrix Multiplication implementations
+// Author: Frank Sossi
 //
+// Description: This file contains.
+//              1. Naive Matrix Matrix Multiplication
+//              2. Naive Matrix Matrix Multiplication using Kahan summation
+//              3. Matrix Matrix Multiplication using tiling
+//              4. Matrix Matrix Multiplication using tiling and shared memory
 //
 //---------------------------------------------------------------------------
 #pragma once
@@ -19,13 +24,11 @@
 #define RANDOMDATA
 //#define DEBUG
 #define SHARED 
-//#define NAIVE
+#define NAIVE
 //#define WRITE
 
 // This is the size of the block
 constexpr int TILE_SIZE = 32;
-
-
 
 //---------------------------------------------------------------------------
 // Function for Naive Matrix Matrix Multiplication
@@ -54,8 +57,13 @@ __global__ void gemm_naive(const T *matrix_a, const T *matrix_b, T *matrix_c, in
     }
 }
 
+//---------------------------------------------------------------------------
+// Function for Naive Matrix Matrix Multiplication using Kahan summation
+//          to reduce precision loss.
+// Input: pointers to matrix_a, matrix_b, and result matrix_c
+//        matrix dimensions
+// Output: none
 //--------------------------------------------------------------------------
-
 template <typename T>
 __global__ void gemm_kahan(const T *matrix_a, const T *matrix_b, T *matrix_c, int rows, int cols, int width)
 {
@@ -131,7 +139,8 @@ __global__ void gemm_tiled(const T *matrix_a, const T *matrix_b, T *matrix_c, in
 }
 
 //---------------------------------------------------------------------------
-// Function for Naive Matrix Matrix Multiplication
+// Function for Naive Matrix Matrix Multiplication using tiling and shared
+//          memory.
 // Input: pointers to matrix_a, matrix_b, and result matrix_c
 //        matrix dimensions
 // Output: none
@@ -207,8 +216,6 @@ get_time()
 // Input: vectors to hold timing data
 // Output: results.csv
 //---------------------------------------------------------------------------
-
-
 void print_to_csv(const std::vector<long long>& naive_w_memory,
                   const std::vector<long long>& naive_wo_memory,
                   const std::vector<long long>& tiled_w_memory,

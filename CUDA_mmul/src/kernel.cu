@@ -1,7 +1,6 @@
 ﻿//---------------------------------------------------------------------------
 // kernel.cu
-// Authors: Margaret Lanphere, Nick Posey, Breanna Powell, Frank Sossi,
-//          Pragati Dode, Amalaye Oyake
+// Authors: Frank Sossi,
 //
 // This program implements vector addition using CUDA. The program will
 // use a template function as a reference and then compare the results
@@ -12,9 +11,9 @@
 // Program compiled with Nvidia CUDA Compiler (NVCC) on Windows 11 or Ubuntu 20.10
 // Required: CUDA Toolkit v12[1] To compile:
 // 1. From base Folder $ cd src
-// 2. No debugging symbols: nvcc -arch=sm_86 -lcublas kernel.cu -o lab3
-// 3. With debugging symbols: nvcc -g -G -arch=sm_86 -lcublas kernel.cu -o lab3
-// 4. To run: ./lab3
+// 2. No debugging symbols: nvcc -arch=sm_86 -lcublas kernel.cu -o program2
+// 3. With debugging symbols: nvcc -g -G -arch=sm_86 -lcublas kernel.cu -o program2
+// 4. To run: ./program2
 //
 // 5.2 CMake instructions
 // 1. mkdir build
@@ -26,9 +25,7 @@
 #include <string>
 #include <vector>
 #include <random>
-#include <cuda_runtime.h>
 #include <cublas_v2.h>
-#include "device_launch_parameters.h"
 #include "mmul.h"
 
 
@@ -45,13 +42,12 @@ int main()
 
 
 
-    // make vectors to hold test configurtions
-    std::vector<int> n_values{2047, 5045, 8066, 9546, 10240};
+    // make vectors to hold test configurations
+    std::vector<int> n_values{523, 605, 1000, 5434};
 
     // for each test configuration
-    for (int i = 0; i < n_values.size(); i++){
+    for (int n : n_values){
 
-        int n = n_values[i];
         //int thread_per_block = thread_per_block_values[i];
 
         //print test configuration
@@ -60,11 +56,11 @@ int main()
         std::cout << std::endl;
 
         // Allocate memory for each vector on host
-        double* matrix_a = (double*)malloc(n * n * sizeof(double));
-        double* matrix_b = (double*)malloc(n * n * sizeof(double));
-        double* matrix_naive = (double*)malloc(n * n * sizeof(double));
-        double* matrix_ref = (double*)malloc(n * n * sizeof(double));
-        double* matrix_tiled = (double*)malloc(n * n * sizeof(double));
+        auto* matrix_a = (double*)malloc(n * n * sizeof(double));
+        auto* matrix_b = (double*)malloc(n * n * sizeof(double));
+        auto* matrix_naive = (double*)malloc(n * n * sizeof(double));
+        auto* matrix_ref = (double*)malloc(n * n * sizeof(double));
+        auto* matrix_tiled = (double*)malloc(n * n * sizeof(double));
 
 
 
@@ -141,7 +137,7 @@ int main()
 
         auto cublas_w_mem_end = get_time();
 
-        // calcualte time for cublas with memory
+        // calculate time for cublas with memory
         auto cublas_w_mem_time = 
             std::chrono::duration_cast<std::chrono::nanoseconds>(cublas_w_mem_end - cublas_w_mem_start).count();
 
@@ -216,7 +212,7 @@ int main()
 
         auto naive_w_mem_end = get_time();
 
-        // calcualte time for naive with memory
+        // calculate time for naive with memory
         auto naive_w_mem_time = 
             std::chrono::duration_cast<std::chrono::nanoseconds>(naive_w_mem_end - naive_w_mem_start).count();
 
@@ -291,7 +287,7 @@ int main()
 
         auto tiled_w_mem_end = get_time();
 
-        // calcualte time for tiled with memory
+        // calculate time for tiled with memory
         auto tiled_w_mem_time = 
             std::chrono::duration_cast<std::chrono::nanoseconds>(tiled_w_mem_end - tiled_w_mem_start).count();
 
@@ -332,7 +328,7 @@ int main()
         cudaFree(device_matrix_tiled);
     #endif
         
-        // calcualte the average error between the reference and the tiled matrix and the naive matrix
+        // calculate the average error between the reference and the tiled matrix and the naive matrix
         double error_naive = 0.0;
         double error_tiled = 0.0;
 
